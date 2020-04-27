@@ -1084,7 +1084,7 @@ def dates(request, course_id):
 
     context = {
         'course': course,
-        'course_date_blocks': [block for block in course_date_blocks if block.title != 'current_datetime'],
+        'course_date_blocks': course_date_blocks,
         'verified_upgrade_link': verified_upgrade_deadline_link(request.user, course=course),
         'learner_is_verified': learner_is_verified,
         'user_timezone': user_timezone,
