@@ -535,7 +535,7 @@ class UserProfile(models.Model):
         if self.gender:
             return self.__enumerable_to_display(self.GENDER_CHOICES, self.gender)
 
-    def get_meta(self):  # pylint: disable=missing-docstring
+    def get_meta(self):
         js_str = self.meta
         if not js_str:
             js_str = dict()
@@ -544,7 +544,7 @@ class UserProfile(models.Model):
 
         return js_str
 
-    def set_meta(self, meta_json):  # pylint: disable=missing-docstring
+    def set_meta(self, meta_json):
         self.meta = json.dumps(meta_json)
 
     def set_login_session(self, session_id=None):
@@ -625,7 +625,7 @@ class UserProfile(models.Model):
 
 
 @receiver(models.signals.post_save, sender=UserProfile)
-def invalidate_user_profile_country_cache(sender, instance, **kwargs):  # pylint:   disable=unused-argument, invalid-name
+def invalidate_user_profile_country_cache(sender, instance, **kwargs):  # pylint:   disable=unused-argument
     """Invalidate the cache of country in UserProfile model. """
 
     changed_fields = getattr(instance, '_changed_fields', {})
@@ -659,7 +659,6 @@ def user_profile_post_save_callback(sender, **kwargs):
     Emit analytics events after saving the UserProfile.
     """
     user_profile = kwargs['instance']
-    # pylint: disable=protected-access
     emit_field_changed_events(
         user_profile,
         user_profile.user,
@@ -714,7 +713,6 @@ def user_post_save_callback(sender, **kwargs):
     # Because `emit_field_changed_events` removes the record of the fields that
     # were changed, wait to do that until after we've checked them as part of
     # the condition on whether we want to check for automatic enrollments.
-    # pylint: disable=protected-access
     emit_field_changed_events(
         user,
         user,
@@ -1236,7 +1234,6 @@ class CourseEnrollment(models.Model):
         Returns a boolean value regarding whether the user has access to enroll in the course. Returns False if the
         enrollment has been closed.
         """
-        # pylint: disable=import-error
         from openedx.core.djangoapps.enrollments.permissions import ENROLL_IN_COURSE
         return not user.has_perm(ENROLL_IN_COURSE, course)
 
@@ -2061,7 +2058,7 @@ def invalidate_enrollment_mode_cache(sender, instance, **kwargs):  # pylint: dis
 
 
 @receiver(models.signals.post_save, sender=CourseEnrollment)
-def update_expiry_email_date(sender, instance, **kwargs):  # pylint: disable=unused-argument
+def update_expiry_email_date(sender, instance, **kwargs):
     """
     If the user has enrolled in verified track of a course and has expired ID
     verification then send email to get the ID verified by setting the

@@ -57,11 +57,11 @@ class ResponseTest(unittest.TestCase):
         if self.xml_factory_class:
             self.xml_factory = self.xml_factory_class()
 
-    def build_problem(self, capa_system=None, **kwargs):  # pylint: disable=missing-docstring
+    def build_problem(self, capa_system=None, **kwargs):
         xml = self.xml_factory.build_xml(**kwargs)
         return new_loncapa_problem(xml, capa_system=capa_system)
 
-    def assert_grade(self, problem, submission, expected_correctness, msg=None):  # pylint: disable=missing-docstring
+    def assert_grade(self, problem, submission, expected_correctness, msg=None):
         input_dict = {'1_2_1': submission}
         correct_map = problem.grade_answers(input_dict)
         if msg is None:
@@ -69,11 +69,11 @@ class ResponseTest(unittest.TestCase):
         else:
             self.assertEqual(correct_map.get_correctness('1_2_1'), expected_correctness, msg)
 
-    def assert_answer_format(self, problem):  # pylint: disable=missing-docstring
+    def assert_answer_format(self, problem):
         answers = problem.get_question_answers()
         self.assertIsNotNone(answers['1_2_1'])
 
-    def assert_multiple_grade(self, problem, correct_answers, incorrect_answers):  # pylint: disable=missing-docstring
+    def assert_multiple_grade(self, problem, correct_answers, incorrect_answers):
         for input_str in correct_answers:
             result = problem.grade_answers({'1_2_1': input_str}).get_correctness('1_2_1')
             self.assertEqual(result, 'correct')

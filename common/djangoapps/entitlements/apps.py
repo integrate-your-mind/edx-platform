@@ -18,5 +18,5 @@ class EntitlementsConfig(AppConfig):
         """
         Connect handlers to signals.
         """
-        from . import signals  # pylint: disable=unused-variable
+        from . import signals
         from .tasks import expire_old_entitlements

@@ -6,9 +6,9 @@ from collections import OrderedDict
 
 import mock
 import oauthlib
-import six.moves.urllib.error  # pylint: disable=import-error
-import six.moves.urllib.parse  # pylint: disable=import-error
-import six.moves.urllib.request  # pylint: disable=import-error
+import six.moves.urllib.error
+import six.moves.urllib.parse
+import six.moves.urllib.request
 from django.conf import settings
 from django.urls import reverse
 from six import text_type

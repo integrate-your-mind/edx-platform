@@ -11,9 +11,9 @@ import httpretty
 import mock
 import simplejson as json
 import six
-import six.moves.urllib.error  # pylint: disable=import-error
-import six.moves.urllib.parse  # pylint: disable=import-error
-import six.moves.urllib.request  # pylint: disable=import-error
+import six.moves.urllib.error
+import six.moves.urllib.parse
+import six.moves.urllib.request
 from bs4 import BeautifulSoup
 from django.conf import settings
 from django.core import mail
