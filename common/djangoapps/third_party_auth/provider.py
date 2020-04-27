@@ -4,6 +4,7 @@ Third-party auth provider configuration API.
 
 
 from django.contrib.sites.models import Site
+from more_itertools import unique_everseen
 
 from openedx.core.djangoapps.theming.helpers import get_current_request
 
@@ -30,19 +31,17 @@ class Registry(object):
         Helper method that returns a generator used to iterate over all providers
         of the current site.
         """
-        oauth2_backend_names = OAuth2ProviderConfig.key_values('backend_name', flat=True)
-        for oauth2_backend_name in oauth2_backend_names:
-            provider = OAuth2ProviderConfig.current(oauth2_backend_name)
+        oauth2_backends = OAuth2ProviderConfig.objects.prefetch_related('site').all()
+        for provider in unique_everseen(oauth2_backends, key=lambda p: p.backend_name):
             if provider.enabled_for_current_site and provider.backend_name in _PSA_OAUTH2_BACKENDS:
                 yield provider
         if SAMLConfiguration.is_enabled(Site.objects.get_current(get_current_request()), 'default'):
-            idp_slugs = SAMLProviderConfig.key_values('slug', flat=True)
-            for idp_slug in idp_slugs:
-                provider = SAMLProviderConfig.current(idp_slug)
+            idps = SAMLProviderConfig.objects.prefetch_related('site').all()
+            for provider in unique_everseen(idps, key=lambda p: p.slug):
                 if provider.enabled_for_current_site and provider.backend_name in _PSA_SAML_BACKENDS:
                     yield provider
-        for consumer_key in LTIProviderConfig.key_values('lti_consumer_key', flat=True):
-            provider = LTIProviderConfig.current(consumer_key)
+        lti_providers = LTIProviderConfig.objects.prefetch_related('site').all()
+        for provider in unique_everseen(lti_providers, lambda p: p.lti_consumer_key):
             if provider.enabled_for_current_site and provider.backend_name in _LTI_BACKENDS:
                 yield provider
 
