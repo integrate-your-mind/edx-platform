@@ -147,6 +147,22 @@ class RegistryTest(testutil.TestCase):
         prov = self.configure_google_provider(visible=True, enabled=True, site=site_b)
         self.assertEqual(prov.enabled_for_current_site, False)
 
+    @with_site_configuration(SITE_DOMAIN_A)
+    def test_providers_with_same_backend_name_independent_across_sites(self):
+        """
+        Verify that having two providers configured with the same backend name
+        but for different sites do not shadow each other on retrieval.
+        """
+        site_a = Site.objects.get_or_create(domain=SITE_DOMAIN_A, name=SITE_DOMAIN_A)[0]
+        site_b = Site.objects.get_or_create(domain=SITE_DOMAIN_B, name=SITE_DOMAIN_B)[0]
+
+        self.configure_google_provider(visible=True, enabled=True, site=site_a, secret="sec-aaa")
+        self.configure_google_provider(visible=True, enabled=True, site=site_b, secret="sec-bbb")
+
+        enabled_providers = provider.Registry.enabled()
+        self.assertEqual(len(enabled_providers), 1)
+        self.assertEqual(enabled_providers[0].get_setting("SECRET"), "sec-aaa")
+
     def test_get_returns_enabled_provider(self):
         google_provider = self.configure_google_provider(enabled=True)
         self.assertEqual(google_provider.id, provider.Registry.get(google_provider.provider_id).id)
