@@ -160,5 +160,3 @@ def _get_highlights_for_next_section(sections, course_key):
             yesterday, course_key
         )
     )
-
-
