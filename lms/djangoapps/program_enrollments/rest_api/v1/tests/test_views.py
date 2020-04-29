@@ -68,6 +68,7 @@ from ..constants import (
 _DJANGOAPP_PATCH_FORMAT = 'lms.djangoapps.program_enrollments.{}'
 _REST_API_PATCH_FORMAT = _DJANGOAPP_PATCH_FORMAT.format('rest_api.v1.{}')
 _VIEW_PATCH_FORMAT = _REST_API_PATCH_FORMAT.format('views.{}')
+_UTILS_PATCH_FORMAT = _REST_API_PATCH_FORMAT.format('utils.{}')
 
 
 _get_users_patch_path = _DJANGOAPP_PATCH_FORMAT.format('api.writing.get_users_by_external_keys')
@@ -1594,7 +1595,7 @@ class ProgramCourseEnrollmentOverviewGetTests(
     Tests for the ProgramCourseEnrollmentOverview view GET method.
     """
     patch_resume_url = mock.patch(
-        _VIEW_PATCH_FORMAT.format('get_resume_urls_for_enrollments'),
+        _UTILS_PATCH_FORMAT.format('get_resume_urls_for_enrollments'),
         autospec=True,
     )
 

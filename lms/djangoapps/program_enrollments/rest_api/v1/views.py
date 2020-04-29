@@ -12,17 +12,13 @@ from django.db import transaction
 from edx_rest_framework_extensions import permissions
 from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
 from edx_rest_framework_extensions.auth.session.authentication import SessionAuthenticationAllowInactiveUser
-from opaque_keys.edx.keys import CourseKey
 from organizations.models import Organization
 from rest_framework import status
+from rest_framework.generics import RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from course_modes.models import CourseMode
-from lms.djangoapps.bulk_email.api import get_emails_enabled
-from lms.djangoapps.certificates.api import get_certificate_for_user
-from lms.djangoapps.course_api.api import get_course_run_url, get_due_dates
 from lms.djangoapps.program_enrollments.api import (
     fetch_program_course_enrollments,
     fetch_program_enrollments,
@@ -40,21 +36,17 @@ from lms.djangoapps.program_enrollments.constants import (
 )
 from lms.djangoapps.program_enrollments.exceptions import ProviderDoesNotExistException
 from openedx.core.djangoapps.catalog.utils import (
-    course_run_keys_for_program,
     get_programs,
     get_programs_by_type,
     get_programs_for_organization,
     normalize_program_type
 )
-from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from openedx.core.lib.api.authentication import BearerAuthenticationAllowInactiveUser
 from openedx.core.lib.api.view_utils import DeveloperErrorViewMixin, PaginatedAPIView
-from student.helpers import get_resume_urls_for_enrollments
-from student.models import CourseEnrollment
 from student.roles import CourseInstructorRole, CourseStaffRole, UserBasedRole
 from util.query import read_replica_or_default
 
-from .constants import CourseRunProgressStatuses, ENABLE_ENROLLMENT_RESET_FLAG, MAX_ENROLLMENT_RECORDS
+from .constants import ENABLE_ENROLLMENT_RESET_FLAG, MAX_ENROLLMENT_RECORDS
 from .serializers import (
     CourseRunOverviewListSerializer,
     ProgramCourseEnrollmentRequestSerializer,
@@ -68,10 +60,13 @@ from .utils import (
     ProgramCourseSpecificViewMixin,
     ProgramEnrollmentPagination,
     ProgramSpecificViewMixin,
-    get_course_run_status,
+    UserProgramSpecificViewMixin,
     get_enrollment_http_code,
+    get_enrollment_overviews,
+    get_enrollments_for_courses_in_program,
     verify_course_exists_and_in_program,
-    verify_program_exists
+    verify_program_exists,
+    verify_user_enrolled_in_program
 )
 
 
@@ -773,8 +768,8 @@ class UserProgramReadOnlyAccessView(DeveloperErrorViewMixin, PaginatedAPIView):
 
 class ProgramCourseEnrollmentOverviewView(
         DeveloperErrorViewMixin,
-        ProgramSpecificViewMixin,
-        APIView,
+        UserProgramSpecificViewMixin,
+        RetrieveAPIView,
 ):
     """
     A view for getting data associated with a user's course enrollments
@@ -877,92 +872,25 @@ class ProgramCourseEnrollmentOverviewView(
         SessionAuthenticationAllowInactiveUser,
     )
     permission_classes = (IsAuthenticated,)
+    serializer_class = CourseRunOverviewListSerializer
 
     @verify_program_exists
-    def get(self, request, program_uuid=None):
+    @verify_user_enrolled_in_program
+    def get_object(self):
         """
         Defines the GET endpoint for overviews of course enrollments
         for a user as part of a program.
         """
-        user = request.user
-        self._check_program_enrollment_exists(user, program_uuid)
-
-        course_run_keys = [
-            CourseKey.from_string(key)
-            for key in course_run_keys_for_program(self.program)
-        ]
-
-        course_enrollments = CourseEnrollment.objects.filter(
-            user=user,
-            course_id__in=course_run_keys,
-            mode__in=[CourseMode.VERIFIED, CourseMode.MASTERS],
-            is_active=True,
+        enrollments = get_enrollments_for_courses_in_program(
+            self.request.user, self.program
         )
-
-        overviews = CourseOverview.get_from_ids(course_run_keys)
-
-        course_run_resume_urls = get_resume_urls_for_enrollments(user, course_enrollments)
-
-        course_runs = []
-
-        for enrollment in course_enrollments:
-            overview = overviews[enrollment.course_id]
-
-            certificate_info = get_certificate_for_user(user.username, enrollment.course_id) or {}
-
-            course_run_status = get_course_run_status(overview, certificate_info)
-            if course_run_status == CourseRunProgressStatuses.IN_PROGRESS:
-                due_dates = get_due_dates(request, enrollment.course_id, user)
-            else:
-                due_dates = []
-
-            course_run_dict = {
-                'course_run_id': enrollment.course_id,
-                'display_name': overview.display_name_with_default,
-                'course_run_status': course_run_status,
-                'course_run_url': get_course_run_url(request, enrollment.course_id),
-                'start_date': overview.start,
-                'end_date': overview.end,
-                'due_dates': due_dates,
-            }
-
-            emails_enabled = get_emails_enabled(user, enrollment.course_id)
-            if emails_enabled is not None:
-                course_run_dict['emails_enabled'] = emails_enabled
-
-            if certificate_info.get('download_url'):
-                course_run_dict['certificate_download_url'] = request.build_absolute_uri(
-                    certificate_info['download_url']
-                )
-
-            if self.program['type'] == 'MicroMasters':
-                course_run_dict['micromasters_title'] = self.program['title']
-
-            if course_run_resume_urls.get(enrollment.course_id):
-                relative_resume_course_run_url = course_run_resume_urls.get(
-                    enrollment.course_id
-                )
-                course_run_dict['resume_course_run_url'] = request.build_absolute_uri(
-                    relative_resume_course_run_url
-                )
-
-            course_runs.append(course_run_dict)
-
-        serializer = CourseRunOverviewListSerializer({'course_runs': course_runs})
-        return Response(serializer.data)
-
-    @staticmethod
-    def _check_program_enrollment_exists(user, program_uuid):
-        """
-        Raises ``PermissionDenied`` if the user is not enrolled in the program with the given UUID.
-        """
-        user_enrollment_qs = fetch_program_enrollments(
-            program_uuid=program_uuid,
-            users={user},
-            program_enrollment_statuses={ProgramEnrollmentStatuses.ENROLLED},
+        enrollment_overviews = get_enrollment_overviews(
+            user=self.request.user,
+            program=self.program,
+            enrollments=enrollments,
+            request=self.request,
         )
-        if not user_enrollment_qs.exists():
-            raise PermissionDenied
+        return {'course_runs': enrollment_overviews}
 
 
 class EnrollmentDataResetView(APIView):
