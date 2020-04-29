@@ -1,6 +1,8 @@
 """
 Unit tests for ProgramEnrollment views.
 """
+
+
 import json
 from collections import OrderedDict, defaultdict
 from datetime import datetime, timedelta
@@ -10,6 +12,7 @@ import ddt
 import mock
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -37,6 +40,7 @@ from lms.djangoapps.program_enrollments.tests.factories import (
     ProgramCourseEnrollmentFactory,
     ProgramEnrollmentFactory
 )
+from openedx.core.djangoapps.catalog.cache import PROGRAM_CACHE_KEY_TPL, PROGRAMS_BY_ORGANIZATION_CACHE_KEY_TPL
 from openedx.core.djangoapps.catalog.tests.factories import (
     CourseFactory,
     CourseRunFactory,
@@ -46,6 +50,7 @@ from openedx.core.djangoapps.catalog.tests.factories import (
 )
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from openedx.core.djangoapps.content.course_overviews.tests.factories import CourseOverviewFactory
+from openedx.core.djangolib.testing.utils import CacheIsolationMixin
 from student.roles import CourseStaffRole
 from student.tests.factories import CourseEnrollmentFactory, UserFactory
 from third_party_auth.tests.factories import SAMLProviderConfigFactory
@@ -59,7 +64,6 @@ from ..constants import (
     REQUEST_STUDENT_KEY,
     CourseRunProgressStatuses
 )
-from .mixins import ProgramCacheMixin
 
 _DJANGOAPP_PATCH_FORMAT = 'lms.djangoapps.program_enrollments.{}'
 _REST_API_PATCH_FORMAT = _DJANGOAPP_PATCH_FORMAT.format('rest_api.v1.{}')
@@ -73,6 +77,19 @@ _patch_get_users = mock.patch(
     autospec=True,
     return_value=defaultdict(lambda: None),
 )
+
+
+class ProgramCacheMixin(CacheIsolationMixin):
+    """
+    Mixin for using program cache in tests
+    """
+    ENABLED_CACHES = ['default']
+
+    def set_program_in_catalog_cache(self, program_uuid, program):
+        cache.set(PROGRAM_CACHE_KEY_TPL.format(uuid=program_uuid), program, None)
+
+    def set_org_in_catalog_cache(self, organization, program_uuids):
+        cache.set(PROGRAMS_BY_ORGANIZATION_CACHE_KEY_TPL.format(org_key=organization.short_name), program_uuids)
 
 
 class EnrollmentsDataMixin(ProgramCacheMixin):
