@@ -110,7 +110,7 @@ class TestVerifiedUpgradesWithMasquerade(MasqueradeTestBase):
     def test_masquerade_as_verified_student(self):
         user_group_id = self.get_group_id_by_course_mode_name(
             self.verified_course.id,
-            'Verified Certificates'
+            'Verified Certificate'
         )
         self.update_masquerade(role='student', course=self.verified_course, group_id=user_group_id)
         response = self.client.get(course_home_url(self.verified_course))
@@ -124,6 +124,6 @@ class TestVerifiedUpgradesWithMasquerade(MasqueradeTestBase):
             'Masters'
         )
         self.update_masquerade(role='student', course=self.masters_course, group_id=user_group_id)
-        response = self.client.get(course_home_url(self.verified_course))
+        response = self.client.get(course_home_url(self.masters_course))
         self.assertNotContains(response, TEST_VERIFICATION_SOCK_LOCATOR, html=False)
         self.assertNotContains(response, UPGRADE_MESSAGE_CONTAINER, html=False)
