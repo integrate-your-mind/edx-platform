@@ -6,7 +6,6 @@ ProgramEnrollment Views
 
 from ccx_keys.locator import CCXLocator
 from django.conf import settings
-from django.core.exceptions import PermissionDenied
 from django.core.management import call_command
 from django.db import transaction
 from edx_rest_framework_extensions import permissions
@@ -764,6 +763,21 @@ class UserProgramReadOnlyAccessView(DeveloperErrorViewMixin, PaginatedAPIView):
                     program_dict[course_run_program['uuid']] = course_run_program
 
         return program_dict.values()
+
+
+class UserProgramCourseEnrollmentView(
+        DeveloperErrorViewMixin,
+        UserProgramSpecificViewMixin,
+        PaginatedAPIView,
+):
+    """
+    TODO
+    """
+    def get(self, request, *args, **kwargs):
+        """
+        TODO
+        """
+        raise NotImplementedError()
 
 
 class ProgramCourseEnrollmentOverviewView(
