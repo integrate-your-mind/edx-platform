@@ -158,6 +158,7 @@ class CertificatesListView(APIView):
                 permissions.JwtHasUserFilterForRequestedUser
             )
         ),
+        permissions.IsAdminUser,
     )
 
     required_scopes = ['certificates:read']
