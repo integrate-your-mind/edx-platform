@@ -23,6 +23,7 @@ from .test_course_home import course_home_url, TEST_UPDATE_MESSAGE
 from .test_course_sock import TEST_VERIFICATION_SOCK_LOCATOR
 
 TEST_PASSWORD = 'test'
+UPGRADE_MESSAGE_CONTAINER = 'section-upgrade'
 
 
 
@@ -91,17 +92,19 @@ class MasqueradeTestBase(SharedModuleStoreTestCase):
         self.assertEqual(response.status_code, 200)
         return response
 
-class TestCourseSockViewWithMasquerade(MasqueradeTestBase):
+class TestVerifiedUpgradesWithMasquerade(MasqueradeTestBase):
     """
-    Tests for the course verification sock fragment view while the user is being masqueraded.
+    Tests for the course verification upgrade messages while the user is being masqueraded.
     """
 
     @override_waffle_flag(DISPLAY_COURSE_SOCK_FLAG, active=True)
+    @override_waffle_flag(SHOW_UPGRADE_MSG_ON_COURSE_HOME, active=True)
     def test_masquerade_as_student(self):
         # Elevate the staff user to be student
         self.update_masquerade(role='student', course=self.verified_course)
         response = self.client.get(course_home_url(self.verified_course))
         self.assertContains(response, TEST_VERIFICATION_SOCK_LOCATOR, html=False)
+        self.assertContains(response, UPGRADE_MESSAGE_CONTAINER, html=False)
 
     @override_waffle_flag(DISPLAY_COURSE_SOCK_FLAG, active=True)
     def test_masquerade_as_verified_student(self):
@@ -112,6 +115,7 @@ class TestCourseSockViewWithMasquerade(MasqueradeTestBase):
         self.update_masquerade(role='student', course=self.verified_course, group_id=user_group_id)
         response = self.client.get(course_home_url(self.verified_course))
         self.assertNotContains(response, TEST_VERIFICATION_SOCK_LOCATOR, html=False)
+        self.assertNotContains(response, UPGRADE_MESSAGE_CONTAINER, html=False)
 
     @override_waffle_flag(DISPLAY_COURSE_SOCK_FLAG, active=True)
     def test_masquerade_as_masters_student(self):
@@ -122,16 +126,4 @@ class TestCourseSockViewWithMasquerade(MasqueradeTestBase):
         self.update_masquerade(role='student', course=self.masters_course, group_id=user_group_id)
         response = self.client.get(course_home_url(self.verified_course))
         self.assertNotContains(response, TEST_VERIFICATION_SOCK_LOCATOR, html=False)
-
-
-class TestCourseHomeViewWithMasquerade(MasqueradeTestBase):
-    """
-    Tests for the course verification message on the course_home
-    fragment view while the user is being masqueraded.
-    """
-    @override_waffle_flag(SHOW_UPGRADE_MSG_ON_COURSE_HOME, active=True)
-    def test_masquerade_as_student(self):
-        # Elevate the staff user to be student
-        self.update_masquerade(role='student', course=self.verified_course)
-        response = self.client.get(course_home_url(self.verified_course))
-        self.assertContains(response, TEST_UPDATE_MESSAGE, html=False)
+        self.assertNotContains(response, UPGRADE_MESSAGE_CONTAINER, html=False)
