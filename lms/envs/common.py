@@ -1331,7 +1331,7 @@ STATICI18N_OUTPUT_DIR = "js/i18n"
 
 
 # Localization strings (e.g. django.po) are under these directories
-def _make_locale_paths(settings):
+def _make_locale_paths(settings):  # pylint: disable=missing-function-docstring
     locale_paths = [settings.REPO_ROOT + '/conf/locale']  # edx-platform/conf/locale/
     if settings.ENABLE_COMPREHENSIVE_THEMING:
         # Add locale paths to settings for comprehensive theming.

@@ -9,7 +9,6 @@ import time
 
 import eventtracking
 import six
-import six.moves.urllib.parse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core import exceptions

@@ -70,7 +70,7 @@ def test_process_url():
 def test_process_url_data_dir_exists():
     base = '"/static/{data_dir}/file.png"'.format(data_dir=DATA_DIRECTORY)
 
-    def processor(original, prefix, quote, rest):
+    def processor(original, prefix, quote, rest):  # pylint: disable=unused-argument
         return quote + 'test' + rest + quote
 
     assert process_static_urls(base, processor, data_dir=DATA_DIRECTORY) == base

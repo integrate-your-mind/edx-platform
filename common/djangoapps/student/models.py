@@ -535,7 +535,7 @@ class UserProfile(models.Model):
         if self.gender:
             return self.__enumerable_to_display(self.GENDER_CHOICES, self.gender)
 
-    def get_meta(self):
+    def get_meta(self):  # pylint: disable=missing-docstring
         js_str = self.meta
         if not js_str:
             js_str = dict()
@@ -2058,7 +2058,7 @@ def invalidate_enrollment_mode_cache(sender, instance, **kwargs):  # pylint: dis
 
 
 @receiver(models.signals.post_save, sender=CourseEnrollment)
-def update_expiry_email_date(sender, instance, **kwargs):
+def update_expiry_email_date(sender, instance, **kwargs):  # pylint: disable=unused-argument
     """
     If the user has enrolled in verified track of a course and has expired ID
     verification then send email to get the ID verified by setting the

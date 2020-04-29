@@ -9,7 +9,6 @@ import re
 
 import ddt
 import six
-import six.moves.urllib.parse
 from six.moves import range, zip
 from ccx_keys.locator import CCXLocator
 from django.conf import settings

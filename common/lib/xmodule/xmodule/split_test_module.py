@@ -385,6 +385,7 @@ class SplitTestModule(SplitTestFields, XModule, StudioEditableModule):
 @XBlock.needs('user_tags')
 @XBlock.needs('partitions')
 @XBlock.needs('user')
+# pylint: disable=missing-class-docstring
 class SplitTestDescriptor(SplitTestFields, SequenceDescriptor, StudioEditableDescriptor):
     # the editing interface can be the same as for sequences -- just a container
     module_class = SplitTestModule

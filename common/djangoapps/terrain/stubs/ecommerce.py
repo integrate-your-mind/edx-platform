@@ -10,9 +10,9 @@ import six.moves.urllib.parse
 from .http import StubHttpRequestHandler, StubHttpService
 
 
-class StubEcommerceServiceHandler(StubHttpRequestHandler):
+class StubEcommerceServiceHandler(StubHttpRequestHandler):  # pylint: disable=missing-docstring
 
-    def do_GET(self):
+    def do_GET(self):  # pylint: missing-docstring
         pattern_handlers = {
             '/api/v2/orders/$': self.get_orders_list,
         }
